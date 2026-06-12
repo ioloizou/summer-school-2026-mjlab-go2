@@ -20,7 +20,7 @@ uv run train Mjlab-Velocity-Flat-Unitree-Go2 --env.scene.num-envs 4096 --agent-m
 
 ## Play the policy's latest checkpoint
 ```bash
-uv run play Mjlab-Velocity-Flat-Unitree-Go2 --checkpoint_file=/<path-to-repository>/summer-school-2026-mjlab-go2/logs/rsl_rl/go2_velocity/<run-name>/model_<latest-number>.pt 
+uv run play Mjlab-Velocity-Flat-Unitree-Go2 --checkpoint_file <path-to-repository>/summer-school-2026-mjlab-go2/logs/rsl_rl/go2_velocity/<run-name>/model_<latest-number>.pt 
 ```
 
 ## Deployment
