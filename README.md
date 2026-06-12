@@ -7,9 +7,9 @@ The files you have which have an uncompleted part for you to complete are
 
 - `src/unitree_go2/go2_constants.py` : Used to configure most of the parameters related to the robot.
 
-- `src/unitree_go2_velocity/env_cfg.py`: Everything related to the enviroments are configured (rewards, domain randomization, etc.)
+- `src/unitree_go2_velocity/env_cfg.py`: Everything related to the enviroments are configured here (rewards, domain randomization, etc.)
 
-- `src/unitree_go2_velocity/rl_cfg.py`: Everything related to the PPO algorithm is configured (actor, critic, PPO parameters)
+- `src/unitree_go2_velocity/rl_cfg.py`: Everything related to the PPO algorithm are configured here (actor, critic, PPO parameters)
 
 ## Train the policy
 After having completed the scripts, you will be able to launch you training with the following command
