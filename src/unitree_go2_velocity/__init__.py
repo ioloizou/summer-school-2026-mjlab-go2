@@ -1,3 +1,7 @@
+import os
+
+os.environ.setdefault("MUJOCO_GL", "egl")
+
 from mjlab.tasks.registry import register_mjlab_task
 
 from .env_cfg import unitree_go2_flat_env_cfg

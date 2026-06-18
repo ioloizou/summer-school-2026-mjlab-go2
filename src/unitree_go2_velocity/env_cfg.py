@@ -28,44 +28,6 @@ from mjlab.tasks.velocity import mdp
 from mjlab.tasks.velocity.mdp import UniformVelocityCommandCfg
 from mjlab.tasks.velocity.velocity_env_cfg import make_velocity_env_cfg
 
-import torch
-
-
-def phase(env: ManagerBasedRlEnvCfg, period: float, command_name: str) -> torch.Tensor:
-    global_phase = (env.episode_length_buf * env.step_dt) % period / period
-    phase = torch.zeros(env.num_envs, 2, device=env.device)
-    phase[:, 0] = torch.sin(global_phase * torch.pi * 2.0)
-    phase[:, 1] = torch.cos(global_phase * torch.pi * 2.0)
-    stand_mask = torch.linalg.norm(env.command_manager.get_command(command_name), dim=1) < 0.1
-    phase = torch.where(stand_mask.unsqueeze(1), torch.zeros_like(phase), phase)
-    return phase
-
-def feet_gait(
-        env: ManagerBasedRlEnvCfg,
-        period: float,
-        offset: list[float],
-        threshold: float,
-        command_threshold: float,
-        command_name: str,
-        sensor_name: str,
-) -> torch.Tensor:
-    sensor: ContactSensorCfg = env.scene[sensor_name]
-    is_contact = sensor.data.current_contact_time > 0
-    global_phase = ((env.episode_length_buf * env.step_dt) / period).unsqueeze(1)
-    offsets = torch.as_tensor(offset, device=env.device, dtype=global_phase.dtype).view(1, -1)
-    leg_phase = (global_phase + offsets) % 1.0
-    is_stance = (leg_phase < threshold)
-    reward = (is_stance == is_contact).float().mean(dim=1)
-    if command_name is not None:
-        command = env.command_manager.get_command(command_name)
-        if command is not None:
-            linear_norm = torch.norm(command[:, :2], dim=1)
-            angular_norm = torch.abs(command[:, 2])
-            total_command = linear_norm + angular_norm
-            scale = (total_command > command_threshold).float()
-            reward *= scale
-    return reward
-
 
 def unitree_go2_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     """Create Unitree Go2 flat terrain velocity configuration."""
@@ -129,17 +91,6 @@ def unitree_go2_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
         history_length=4,
     )
 
-    # NOTE: we are missing a trunk assembly to do self-collision with
-    # self_collision_cfg = ContactSensorCfg(
-    #     name="self_collision",
-    #     primary=ContactMatch(mode="subtree", pattern="base_link", entity="robot"),
-    #     secondary=ContactMatch(mode="subtree", pattern="base_link", entity="robot"),
-    #     fields=("found", "force"),
-    #     reduce="none",
-    #     num_slots=1,
-    #     history_length=4,
-    # )
-
     cfg.scene.sensors = (cfg.scene.sensors or ()) + (
         feet_ground_cfg,
         nonfeet_ground_cfg,
@@ -154,28 +105,32 @@ def unitree_go2_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
       func=mdp.builtin_sensor,
       params={"sensor_name": "robot/imu_ang_vel"},
       noise=Unoise(n_min=-0.2, n_max=0.2),
+      scale=0.25,
     ),
     "projected_gravity": ObservationTermCfg(
       func=mdp.projected_gravity,
       noise=Unoise(n_min=-0.05, n_max=0.05),
+    scale=1.0,
     ),
     "command": ObservationTermCfg(
       func=mdp.generated_commands,
       params={"command_name": "twist"},
-    ),
-    "phase": ObservationTermCfg(
-      func=phase,
-      params={"period": 0.6, "command_name": "twist"},
+      scale=(3.0, 2.0, 0.5),
     ),
     "joint_pos": ObservationTermCfg(
       func=mdp.joint_pos_rel,
       noise=Unoise(n_min=-0.01, n_max=0.01),
+      scale=1.0,
     ),
     "joint_vel": ObservationTermCfg(
       func=mdp.joint_vel_rel,
       noise=Unoise(n_min=-1.5, n_max=1.5),
+      scale=0.05,
     ),
-    "actions": ObservationTermCfg(func=mdp.last_action),
+    "actions": ObservationTermCfg(
+        func=mdp.last_action,
+        scale=1.0,
+    ),
     }
     
     # del cfg.observations["actor"].terms["height_scan"]
@@ -247,40 +202,9 @@ def unitree_go2_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     for reward_name in ["foot_clearance", "foot_slip"]:
         cfg.rewards[reward_name].params["asset_cfg"].site_names = site_names
     
-    cfg.rewards["feet_gait"] = RewardTermCfg(
-                func=feet_gait,
-                weight=0.5,
-                params={
-                    "period": 0.6,
-                    "offset": [0.0, 0.5],
-                    "threshold": 0.56,
-                    "command_threshold": 0.1,
-                    "command_name": "twist",
-                    "sensor_name": "feet_ground_contact",
-                }
-                )
-    cfg.rewards["feet_gait"].params["offset"] = [0.0, 0.5, 0.5, 0.0]
-
     cfg.rewards["body_ang_vel"].weight = 0.0
     cfg.rewards["angular_momentum"].weight = 0.0
     cfg.rewards["air_time"].weight = 0.0
-
-    # Per-body-group collision penalties.
-    # cfg.rewards["self_collisions"] = RewardTermCfg(
-    #     func=mdp.self_collision_cost,
-    #     weight=-0.1,
-    #     params={"sensor_name": self_collision_cfg.name},
-    # )
-    # cfg.rewards["shank_collision"] = RewardTermCfg(
-    #     func=mdp.self_collision_cost,
-    #     weight=-0.1,
-    #     params={"sensor_name": shank_ground_cfg.name},
-    # )
-    # cfg.rewards["base_link_head_collision"] = RewardTermCfg(
-    #     func=mdp.self_collision_cost,
-    #     weight=-0.1,
-    #     params={"sensor_name": base_link_head_ground_cfg.name},
-    # )
 
     cfg.terminations["illegal_contact"] = TerminationTermCfg(
         func=mdp.illegal_contact,
