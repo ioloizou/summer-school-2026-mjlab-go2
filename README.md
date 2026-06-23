@@ -64,12 +64,14 @@ uv run train Mjlab-Velocity-Flat-Unitree-Go2 --env.scene.num-envs 2048 --agent-m
 ```
 
 ## Play the policy's latest checkpoint
+To see during training the latest policy behavior in Mujoco
 ```bash
 uv run play Mjlab-Velocity-Flat-Unitree-Go2 --checkpoint_file <path-to-repository>/summer-school-2026-mjlab-go2/logs/rsl_rl/go2_velocity/<run-name>/model_<latest-number>.pt 
 ```
+If you want to see more agents (robots) in parallel you can use the argument `--num.envs 10`
 
 ## Play an already trained policy
-Due to time limatation of the tutorial and given many of you may not have a capable gpu. You can visualise the end result with this command with an already trained policy with the same configuration.
+Due to the time limitation of the tutorial and given many of you may not have a capable gpu, you can visualise the end result with this command with an already trained policy based on the same configuration.
 ```bash
 uv run play Mjlab-Velocity-Flat-Unitree-Go2 --checkpoint_file <path-to-repository>/summer-school-2026-mjlab-go2/model_3000.pt 
 ```
