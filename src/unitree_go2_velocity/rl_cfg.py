@@ -9,22 +9,33 @@ from mjlab.rl import (
 
 def unitree_go2_ppo_runner_cfg() -> RslRlOnPolicyRunnerCfg:
     """Create RL runner configuration for Unitree Go2 velocity task."""
+
+    # TODO(Exercise 9 - Network Architecture): for the actor/critic MLPs, set
+    # hidden_dims (a tuple of ints) to 3 hidden layers of 512, then 256,
+    # then 128 units, and activation (a string) to ELU.
+    raise NotImplementedError(
+        "TODO: choose hidden_dims and activation (see comment above)"
+    )
+
+    actor = RslRlModelCfg(
+        hidden_dims=hidden_dims,
+        activation=activation,
+        obs_normalization=True,
+        distribution_cfg={
+            "class_name": "GaussianDistribution",
+            "init_std": 1.0,
+            "std_type": "scalar",
+        },
+    )
+    critic = RslRlModelCfg(
+        hidden_dims=hidden_dims,
+        activation=activation,
+        obs_normalization=True,
+    )
+
     return RslRlOnPolicyRunnerCfg(
-        actor=RslRlModelCfg(
-            hidden_dims=(512, 256, 128),
-            activation="elu",
-            obs_normalization=True,
-            distribution_cfg={
-                "class_name": "GaussianDistribution",
-                "init_std": 1.0,
-                "std_type": "scalar",
-            },
-        ),
-        critic=RslRlModelCfg(
-            hidden_dims=(512, 256, 128),
-            activation="elu",
-            obs_normalization=True,
-        ),
+        actor=actor,
+        critic=critic,
         algorithm=RslRlPpoAlgorithmCfg(
             value_loss_coef=1.0,
             use_clipped_value_loss=True,
@@ -39,6 +50,7 @@ def unitree_go2_ppo_runner_cfg() -> RslRlOnPolicyRunnerCfg:
             desired_kl=0.01,
             max_grad_norm=1.0,
         ),
+        logger="tensorboard",
         wandb_project="Unitree-Go2",
         experiment_name="go2_velocity",
         run_name="flat_velocity",
