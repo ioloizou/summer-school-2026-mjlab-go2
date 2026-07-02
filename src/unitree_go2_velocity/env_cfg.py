@@ -63,24 +63,17 @@ def unitree_go2_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
         ),
     )
 
-    # TODO(Exercise 2 - Contact Sensor): define feet_ground_cfg.
-    #
-    # This sensor detects contact between the feet and the terrain, and is
-    # the basis for several observations and rewards below (foot_air_time,
-    # foot_contact, foot_contact_forces, foot_swing_height, foot_slip,
-    # soft_landing). Those terms look the sensor up by name, so it MUST be
-    # named exactly "feet_ground_contact".
-    #
-    # Fill in a ContactSensorCfg with:
-    #   - name="feet_ground_contact"
-    #   - primary: match the foot collision geoms (mode="geom",
-    #     pattern=geom_names, entity="robot") — geom_names is defined above
-    #   - secondary: match the terrain body (mode="body", pattern="terrain")
-    #   - fields=("found", "force")
-    #   - reduce="netforce" (collapse contacts per foot into a single value)
-    #   - num_slots=1
-    #   - track_air_time=True (required by the foot_air_time observation)
-    raise NotImplementedError("TODO: implement feet_ground_cfg (see comment above)")
+    # TODO(Exercise 2 - Contact Sensor): 
+    
+    feet_ground_cfg = ContactSensorCfg(
+        name="feet_ground_contact",
+        primary=ContactMatch(mode="geom", pattern=geom_names, entity="robot"),
+        secondary=ContactMatch(mode="body", pattern="terrain"),
+        fields=("found", "force"),
+        reduce="netforce",
+        num_slots=1,
+        track_air_time=True,
+    )
 
     nonfeet_ground_cfg = ContactSensorCfg(
         name="nonfeet_ground_touch",
@@ -111,16 +104,7 @@ def unitree_go2_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     # Observations
     ##
 
-    # TODO(Exercise 3 - Observation): add a "joint_vel" term to actor_terms.
-    #
-    # Mirror the "joint_pos" term below, but for joint velocities:
-    #   - func=mdp.joint_vel_rel
-    #   - noise: joint velocities are noisier than positions, so we need to use a
-    #     wider Unoise range than joint_pos uses (+/-1.5 rad/s)
-    #   - scale: A value that brings joint velocities to roughfggddgdgdggd v0ly the
-    #     same order of magnitude as the other observation terms (e.g. ~0.05)
-    # Add it with: actor_terms["joint_vel"] = ObservationTermCfg(...) right after the joint_pos term.
-    raise NotImplementedError("TODO: add a 'joint_vel' observation term to actor_terms (see comment above)")
+    # TODO(Exercise 3 - Observation): 
 
     actor_terms = {
         "base_ang_vel": ObservationTermCfg(
@@ -143,6 +127,11 @@ def unitree_go2_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
             func=mdp.joint_pos_rel,
             noise=Unoise(n_min=-0.01, n_max=0.01),
             scale=1.0,
+        ),
+        "joint_vel": ObservationTermCfg(
+            func=mdp.joint_vel_rel,
+            noise=Unoise(n_min=-1.5, n_max=1.5),
+            scale=0.05,
         ),
         "actions": ObservationTermCfg(
             func=mdp.last_action,
@@ -233,21 +222,7 @@ def unitree_go2_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     # Events
     ##
 
-    # TODO(Exercise 4 - Event): add a "push_robot" event to events.
-    #
-    # This applies a velocity perturbation to the robot during an episode (domain
-    # randomization for robustness to external pushes). Mirror reset_base /
-    # reset_robot_joints below for EventTermCfg structure, but note this one
-    # uses a different mode:
-    #   - func=mdp.push_by_setting_velocity
-    #   - mode="interval"
-    #   - interval_range_s=(1.0, 3.0)
-    #   - params={"velocity_range": {
-    #         "x": (-0.5, 0.5), "y": (-0.5, 0.5), "z": (-0.4, 0.4),
-    #         "roll": (-0.52, 0.52), "pitch": (-0.52, 0.52), "yaw": (-0.78, 0.78),
-    #     }}
-    # Add it with: events["push_robot"] = EventTermCfg(...)
-    raise NotImplementedError("TODO: add a 'push_robot' event to events (see comment above)")
+    # TODO(Exercise 4 - Event):
 
     events = {
         "reset_base": EventTermCfg(
@@ -328,29 +303,39 @@ def unitree_go2_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
                 },
             },
         ),
+        "push_robot": EventTermCfg(
+            func=mdp.push_by_setting_velocity,
+            mode="interval",
+            interval_range_s=(1.0, 3.0),
+            params={
+                "velocity_range": {
+                    "x": (-0.5, 0.5),
+                    "y": (-0.5, 0.5),
+                    "z": (-0.4, 0.4),
+                    "roll": (-0.52, 0.52),
+                    "pitch": (-0.52, 0.52),
+                    "yaw": (-0.78, 0.78),
+                }
+            },
+        ),
     }
-
 
     ##
     # Rewards
     ##
 
-    # TODO(Exercise 5 - Reward): add a "track_angular_velocity" term to rewards.
-    #
-    # Mirror "track_linear_velocity" below (same RewardTermCfg shape):
-    #   - func=custom_mdp.track_angular_velocity
-    #   - weight=2.0 (same order of magnitude as track_linear_velocity)
-    #   - params={"command_name": "twist", "std": math.sqrt(0.5)}
-    # Add it with: rewards["track_angular_velocity"] = RewardTermCfg(...)
-    raise NotImplementedError(
-        "TODO: add a 'track_angular_velocity' reward to rewards (see comment above)"
-    )
+    # TODO(Exercise 5 - Reward):
 
     rewards = {
         "track_linear_velocity": RewardTermCfg(
             func=mdp.track_linear_velocity,
             weight=2.0,
             params={"command_name": "twist", "std": math.sqrt(0.25)},
+        ),
+        "track_angular_velocity": RewardTermCfg(
+            func=custom_mdp.track_angular_velocity,
+            weight=2.0,
+            params={"command_name": "twist", "std": math.sqrt(0.5)},
         ),
         "upright": RewardTermCfg(
             func=mdp.upright,
@@ -453,21 +438,18 @@ def unitree_go2_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
 
     curriculum: dict[str, CurriculumTermCfg] = {}
 
-    # TODO(Exercise 6 - Curriculum): add a "command_vel" curriculum term.
-    #
-    # This widens the commanded velocity range as training progresses,
-    # starting easy and ramping up difficulty (step is in env steps:
-    # num_steps_per_env=24 per iteration, see rl_cfg.py). Fill in a
-    # CurriculumTermCfg with:
-    #   - func=mdp.commands_vel
-    #   - params={"command_name": "twist", "velocity_stages": [
-    #         {"step": 0, "lin_vel_x": (-1.0, 1.0), "ang_vel_z": (-0.5, 0.5)},
-    #         {"step": 5000 * 24, "lin_vel_x": (-1.5, 2.0), "ang_vel_z": (-0.7, 0.7)},
-    #         {"step": 10000 * 24, "lin_vel_x": (-2.0, 3.0)},
-    #     ]}
-    # Add it with: curriculum["command_vel"] = CurriculumTermCfg(...)
-    raise NotImplementedError(
-        "TODO: add a 'command_vel' curriculum term to curriculum (see comment above)"
+    # TODO(Exercise 6 - Curriculum):
+
+    curriculum["command_vel"] = CurriculumTermCfg(
+        func=mdp.commands_vel,
+        params={
+            "command_name": "twist",
+            "velocity_stages": [
+                {"step": 0, "lin_vel_x": (-1.0, 1.0), "ang_vel_z": (-0.5, 0.5)},
+                {"step": 5000 * 24, "lin_vel_x": (-1.5, 2.0), "ang_vel_z": (-0.7, 0.7)},
+                {"step": 10000 * 24, "lin_vel_x": (-2.0, 3.0)},
+            ],
+        },
     )
 
     ##
