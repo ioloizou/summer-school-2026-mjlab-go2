@@ -111,6 +111,17 @@ def unitree_go2_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     # Observations
     ##
 
+    # TODO(Exercise 3 - Observation): add a "joint_vel" term to actor_terms.
+    #
+    # Mirror the "joint_pos" term below, but for joint velocities:
+    #   - func=mdp.joint_vel_rel
+    #   - noise: joint velocities are noisier than positions, so we need to use a
+    #     wider Unoise range than joint_pos uses (+/-1.5 rad/s)
+    #   - scale: A value that brings joint velocities to roughfggddgdgdggd v0ly the
+    #     same order of magnitude as the other observation terms (e.g. ~0.05)
+    # Add it with: actor_terms["joint_vel"] = ObservationTermCfg(...) right after the joint_pos term.
+    raise NotImplementedError("TODO: add a 'joint_vel' observation term to actor_terms (see comment above)")
+
     actor_terms = {
         "base_ang_vel": ObservationTermCfg(
             func=mdp.builtin_sensor,
@@ -138,17 +149,6 @@ def unitree_go2_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
             scale=1.0,
         ),
     }
-
-    # TODO(Exercise 3 - Observation): add a "joint_vel" term to actor_terms.
-    #
-    # Mirror the "joint_pos" term above, but for joint velocities:
-    #   - func=mdp.joint_vel_rel
-    #   - noise: joint velocities are noisier than positions, so we need to use a
-    #     wider Unoise range than joint_pos uses (+/-1.5 rad/s)
-    #   - scale: A value that brings joint velocities to roughfggddgdgdggd v0ly the
-    #     same order of magnitude as the other observation terms (e.g. ~0.05)
-    # Add it with: actor_terms["joint_vel"] = ObservationTermCfg(...) right after the joint_pos term.
-    raise NotImplementedError("TODO: add a 'joint_vel' observation term to actor_terms (see comment above)")
 
     critic_terms = {
         **actor_terms,
@@ -233,6 +233,22 @@ def unitree_go2_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     # Events
     ##
 
+    # TODO(Exercise 4 - Event): add a "push_robot" event to events.
+    #
+    # This applies a velocity perturbation to the robot during an episode (domain
+    # randomization for robustness to external pushes). Mirror reset_base /
+    # reset_robot_joints below for EventTermCfg structure, but note this one
+    # uses a different mode:
+    #   - func=mdp.push_by_setting_velocity
+    #   - mode="interval"
+    #   - interval_range_s=(1.0, 3.0)
+    #   - params={"velocity_range": {
+    #         "x": (-0.5, 0.5), "y": (-0.5, 0.5), "z": (-0.4, 0.4),
+    #         "roll": (-0.52, 0.52), "pitch": (-0.52, 0.52), "yaw": (-0.78, 0.78),
+    #     }}
+    # Add it with: events["push_robot"] = EventTermCfg(...)
+    raise NotImplementedError("TODO: add a 'push_robot' event to events (see comment above)")
+
     events = {
         "reset_base": EventTermCfg(
             func=mdp.reset_root_state_uniform,
@@ -314,25 +330,21 @@ def unitree_go2_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
         ),
     }
 
-    # TODO(Exercise 4 - Event): add a "push_robot" event to events.
-    #
-    # This applies a velocity perturbation to the robot during an episode (domain
-    # randomization for robustness to external pushes). Mirror reset_base /
-    # reset_robot_joints above for EventTermCfg structure, but note this one
-    # uses a different mode:
-    #   - func=mdp.push_by_setting_velocity
-    #   - mode="interval"
-    #   - interval_range_s=(1.0, 3.0)
-    #   - params={"velocity_range": {
-    #         "x": (-0.5, 0.5), "y": (-0.5, 0.5), "z": (-0.4, 0.4),
-    #         "roll": (-0.52, 0.52), "pitch": (-0.52, 0.52), "yaw": (-0.78, 0.78),
-    #     }}
-    # Add it with: events["push_robot"] = EventTermCfg(...)
-    raise NotImplementedError("TODO: add a 'push_robot' event to events (see comment above)")
 
     ##
     # Rewards
     ##
+
+    # TODO(Exercise 5 - Reward): add a "track_angular_velocity" term to rewards.
+    #
+    # Mirror "track_linear_velocity" below (same RewardTermCfg shape):
+    #   - func=custom_mdp.track_angular_velocity
+    #   - weight=2.0 (same order of magnitude as track_linear_velocity)
+    #   - params={"command_name": "twist", "std": math.sqrt(0.5)}
+    # Add it with: rewards["track_angular_velocity"] = RewardTermCfg(...)
+    raise NotImplementedError(
+        "TODO: add a 'track_angular_velocity' reward to rewards (see comment above)"
+    )
 
     rewards = {
         "track_linear_velocity": RewardTermCfg(
@@ -415,16 +427,6 @@ def unitree_go2_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
         ),
     }
 
-    # TODO(Exercise 5 - Reward): add a "track_angular_velocity" term to rewards.
-    #
-    # Mirror "track_linear_velocity" above (same RewardTermCfg shape):
-    #   - func=custom_mdp.track_angular_velocity
-    #   - weight=2.0 (same order of magnitude as track_linear_velocity)
-    #   - params={"command_name": "twist", "std": math.sqrt(0.5)}
-    # Add it with: rewards["track_angular_velocity"] = RewardTermCfg(...)
-    raise NotImplementedError(
-        "TODO: add a 'track_angular_velocity' reward to rewards (see comment above)"
-    )
 
     ##
     # Terminations
