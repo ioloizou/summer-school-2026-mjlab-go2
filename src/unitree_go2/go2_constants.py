@@ -1,4 +1,4 @@
-"""Unitree Go2 constants. File adapted from G02 unitree_rl_mjlab (https://github.com/unitreerobotics/unitree_rl_mjlab)"""
+"""Unitree Go2 constants. File adapted from Go2 unitree_rl_mjlab (https://github.com/unitreerobotics/unitree_rl_mjlab)"""
 
 from pathlib import Path
 

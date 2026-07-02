@@ -10,7 +10,7 @@ from mjlab.rl import (
 def unitree_go2_ppo_runner_cfg() -> RslRlOnPolicyRunnerCfg:
     """Create RL runner configuration for Unitree Go2 velocity task."""
 
-    # TODO(Exercise 9 - Network Architecture): for the actor/critic MLPs, set
+    # TODO(Exercise 7 - Network Architecture): for the actor/critic MLPs, set
     # hidden_dims (a tuple of ints) to 3 hidden layers of 512, then 256,
     # then 128 units, and activation (a string) to ELU.
     raise NotImplementedError(

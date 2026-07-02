@@ -18,7 +18,7 @@ Each uncompleted part is marked with a `# TODO(Exercise N - ...)` comment, and e
 TODO explains what's needed and points to a similar, already-completed piece of code
 right next to it to use as a reference.
 
-**Exercises 1-6 and 9** are config-wiring exercises: fill in a missing dict entry or
+**Exercises 1-7** are config-wiring exercises: fill in a missing dict entry or
 config object. Each one ends in `raise NotImplementedError(...)` placed directly in the
 config-building code, so the code will fail to import until you **replace** that `raise`
 with your own implementation. You'll hit exercises 1-6 one at a time, in this order:
@@ -32,35 +32,21 @@ with your own implementation. You'll hit exercises 1-6 one at a time, in this or
 5. **Reward** (`env_cfg.py`) — add a `track_angular_velocity` reward term.
 6. **Curriculum** (`env_cfg.py`) — add a `command_vel` curriculum term that widens the
    commanded velocity range over the course of training.
-
-Once 1-6 are done, the package will still fail to import — `rl_cfg.py` is built right
-after `env_cfg.py` whenever the task is registered, so you'll land straight on the last
-exercise next:
-
-9. **Network architecture** (`rl_cfg.py`) — choose `hidden_dims` and `activation`,
+7. **Network architecture** (`rl_cfg.py`) — choose `hidden_dims` and `activation`,
    shared by both the actor and critic MLPs.
 
-**Exercises 7-8** are different: You will write the actual MDP math in
-`custom_mdp.py`, using torch directly on the simulation state, rather than just wiring
-together pre-built functions. The setup code (fetching the robot/command/sensor data)
-is already written for you — you'll find a few intermediate variables set to `None`
-with a comment hint above each one (e.g. `z_error = None  # ...`), replace those with
-the real computation, and a final `raise NotImplementedError(...)` will keep failing
-loudly until you do. Unlike the other exercises, this `raise` lives inside a function
-body, so it won't block the config from importing — it'll only show up once that
-function is actually called during training/play. You can tackle them whenever you
-like, but exercise 5 and "fell_over" (in the Terminations section of `env_cfg.py`)
-already wire them in for you, so once the package imports (exercises 1-6 and 9 done)
-the env still won't actually run until both are done:
+**Exercises 8-9** are different: in `custom_mdp.py` you write the actual MDP math
+with torch, filling in a few `None` variables per the comment hints, instead of just
+wiring together pre-built functions.
 
-7. **Angular velocity reward** (`custom_mdp.py`) — implement `track_angular_velocity`.
-8. **Fell-over termination** (`custom_mdp.py`) — implement `bad_orientation`.
+8. **Angular velocity reward** (`custom_mdp.py`) — implement `track_angular_velocity`.
+9. **Fell-over termination** (`custom_mdp.py`) — implement `bad_orientation`.
 
 ## Train the policy
 After having completed the scripts, you will be able to launch you training with the following command
 
 ```bash
-uv run train Mjlab-Velocity-Flat-Unitree-Go2 --env.scene.num-envs 2048 --agent-max-iterations 3_000
+uv run train Mjlab-Velocity-Flat-Unitree-Go2 --env.scene.num-envs 2048 --agent.max-iterations 3_000
 ```
 
 ## Play the policy's latest checkpoint
@@ -68,10 +54,11 @@ To see during training the latest policy behavior in Mujoco
 ```bash
 uv run play Mjlab-Velocity-Flat-Unitree-Go2 --checkpoint_file <path-to-repository>/summer-school-2026-mjlab-go2/logs/rsl_rl/go2_velocity/<run-name>/model_<latest-number>.pt 
 ```
+
 If you want to see more agents (robots) in parallel you can use the argument `--num.envs 10`
 
 ## Play an already trained policy
-Due to the time limitation of the tutorial and given many of you may not have a capable gpu, you can visualise the end result with this command with an already trained policy based on the same configuration.
+Due to the time limitation of the tutorial and given many of you may not have a capable gpu, you can visualise the end result with this command with an already trained policy (50000 max iterations) based on the same configuration.
 ```bash
-uv run play Mjlab-Velocity-Flat-Unitree-Go2 --checkpoint_file <path-to-repository>/summer-school-2026-mjlab-go2/model_3000.pt 
+uv run play Mjlab-Velocity-Flat-Unitree-Go2 --checkpoint_file <path-to-repository>/summer-school-2026-mjlab-go2/trained_model.pt 
 ```
